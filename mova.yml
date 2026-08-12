@@ -1,0 +1,69 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+      max-file: "3"
+      tag: '{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}'
+
+services:
+  movan-syncnode:
+    image: movachain/movan-syncnode:${DOCKER_TAG:-v0.0.1}
+    entrypoint: /mova/entrypoint.sh
+    restart: unless-stopped
+    environment:
+      # Dashes here are intentional - this is what the vendor image expects,
+      # sourced from the dash-free MOVA_* vars in .env
+      - ID=${MOVA_ID:-0}
+      - READ-TIMEOUT=${MOVA_READ_TIMEOUT:-60}
+      - WRITE-TIMEOUNT=${MOVA_WRITE_TIMEOUT:-60}
+      - ENABLE-CROSS-DOMAIN=${MOVA_ENABLE_CROSS_DOMAIN:-true}
+      - ENABLE-LIGHT-NODE=${MOVA_ENABLE_LIGHT_NODE:-true}
+      - ENABLE-SYNC-FRAME=${MOVA_ENABLE_SYNC_FRAME:-false}
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    <<: *logging
+    # deploy.restart_policy only applies under Swarm; restart: unless-stopped
+    # above is what actually governs restarts under plain `docker compose up`
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 100
+        window: 120s
+    ports:
+      # P2P must stay public - do not gate this behind mova-shared.yml
+      - ${HOST_IP:-0.0.0.0}:${P2P_PORT:-26656}:26656
+    volumes:
+      - ./scripts/entrypoint.sh:/mova/entrypoint.sh
+      - ./mainnet-config:/mova/mainnet-config
+      - ./node-data:/mova/node0
+    networks:
+      default:
+        aliases:
+          - ${NETWORK:-movan}
+    labels:
+      - traefik.enable=true
+      # Recommended EVM JSON-RPC (container's internal port is fixed at 9545
+      # regardless of what RPC_PORT is set to on the host side)
+      - traefik.http.routers.${RPC_HOST:-mova}.service=${RPC_HOST:-mova}
+      - traefik.http.routers.${RPC_HOST:-mova}.entrypoints=websecure
+      - traefik.http.routers.${RPC_HOST:-mova}.rule=Host(`${RPC_HOST:-mova}.${DOMAIN}`)
+      - traefik.http.routers.${RPC_HOST:-mova}.tls.certresolver=letsencrypt
+      - traefik.http.routers.${RPC_HOST:-mova}lb.service=${RPC_HOST:-mova}
+      - traefik.http.routers.${RPC_HOST:-mova}lb.entrypoints=websecure
+      - traefik.http.routers.${RPC_HOST:-mova}lb.rule=Host(`${RPC_LB:-mova-lb}.${DOMAIN}`)
+      - traefik.http.routers.${RPC_HOST:-mova}lb.tls.certresolver=letsencrypt
+      - traefik.http.services.${RPC_HOST:-mova}.loadbalancer.server.port=9545
+      # Recommended EVM WebSocket (container's internal port is fixed at 9546)
+      - traefik.http.routers.${WS_HOST:-movaws}.service=${WS_HOST:-movaws}
+      - traefik.http.routers.${WS_HOST:-movaws}.entrypoints=websecure
+      - traefik.http.routers.${WS_HOST:-movaws}.rule=Host(`${WS_HOST:-movaws}.${DOMAIN}`)
+      - traefik.http.routers.${WS_HOST:-movaws}.tls.certresolver=letsencrypt
+      - traefik.http.routers.${WS_HOST:-movaws}lb.service=${WS_HOST:-movaws}
+      - traefik.http.routers.${WS_HOST:-movaws}lb.entrypoints=websecure
+      - traefik.http.routers.${WS_HOST:-movaws}lb.rule=Host(`${WS_LB:-movaws-lb}.${DOMAIN}`)
+      - traefik.http.routers.${WS_HOST:-movaws}lb.tls.certresolver=letsencrypt
+      - traefik.http.services.${WS_HOST:-movaws}.loadbalancer.server.port=9546

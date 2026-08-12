@@ -1,0 +1,13 @@
+# To be used with mova.yml - add ":rpc-shared.yml" to COMPOSE_FILE in .env
+# if you want the RPC/WS ports reachable directly on the host, not just
+# through Traefik.
+#
+# Host-side port : container's actual internal port (fixed by the vendor image)
+services:
+  movan-syncnode:
+    ports:
+      - ${SHARE_IP:-0.0.0.0}:${RPC_PORT:-26660}:9545/tcp
+      - ${SHARE_IP:-0.0.0.0}:${WS_PORT:-26661}:9546/tcp
+      # Legacy pair - uncomment only if something still needs it
+      # - ${SHARE_IP:-0.0.0.0}:${RPC_PORT_LEGACY:-26658}:8545/tcp
+      # - ${SHARE_IP:-0.0.0.0}:${WS_PORT_LEGACY:-26659}:8546/tcp

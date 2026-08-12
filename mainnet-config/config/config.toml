@@ -150,7 +150,7 @@ max_header_bytes = 1048576
 tls_cert_file = ""
 
 # The path to a file containing matching private key that is used to create the HTTPS server.
-# Migth be either absolute path or path related to tendermint's config directory.
+# Might be either absolute path or path related to tendermint's config directory.
 # NOTE: both tls_cert_file and tls_key_file must be present for Metaversegraph to create HTTPS server.
 # Otherwise, HTTP server is run.
 tls_key_file = ""

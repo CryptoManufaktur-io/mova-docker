@@ -26,6 +26,15 @@ Monitor sync:
 ./movad logs -f movan-syncnode
 ```
 
+## Metrics
+
+Tendermint's Prometheus exporter is enabled by default (`METRICS_ENABLE=1`, `METRICS_PORT=26660` in `.env`).
+`scripts/entrypoint.sh` applies these to `[instrumentation]` in `config.toml` on every start, so it also
+covers node data that was initialized earlier. Metrics use the `mova_` prefix and are served at
+`/metrics` on the container-internal `METRICS_PORT`; the port is not published to the host. The labels in
+`mova.yml` make the central-proxy Prometheus scrape it (requires `ext-network.yml`). Set `METRICS_ENABLE=0`
+to disable. Note this is unrelated to the host-side `RPC_PORT` (also `26660` by default).
+
 ## Verify the node
 
 Check block height is non-zero and increasing:

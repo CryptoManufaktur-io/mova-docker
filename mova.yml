@@ -20,6 +20,9 @@ services:
       - ENABLE-CROSS-DOMAIN=${MOVA_ENABLE_CROSS_DOMAIN:-true}
       - ENABLE-LIGHT-NODE=${MOVA_ENABLE_LIGHT_NODE:-true}
       - ENABLE-SYNC-FRAME=${MOVA_ENABLE_SYNC_FRAME:-false}
+      # Tendermint Prometheus exporter, applied to config.toml by entrypoint.sh
+      - METRICS_ENABLE=${METRICS_ENABLE:-1}
+      - METRICS_PORT=${METRICS_PORT:-26660}
     ulimits:
       nofile:
         soft: 65536
@@ -67,3 +70,9 @@ services:
       - traefik.http.routers.${WS_HOST:-movaws}lb.rule=Host(`${WS_LB:-movaws-lb}.${DOMAIN}`)
       - traefik.http.routers.${WS_HOST:-movaws}lb.tls.certresolver=letsencrypt
       - traefik.http.services.${WS_HOST:-movaws}.loadbalancer.server.port=9546
+      # Tendermint metrics (container-internal, not published)
+      - metrics.scrape=true
+      - metrics.path=/metrics
+      - metrics.port=${METRICS_PORT:-26660}
+      - metrics.instance=mova
+      - metrics.network=${NETWORK:-movan}

@@ -58,7 +58,7 @@ version() {
 # Avoid the use of ;;&
   case "${__value}" in
     *mova.yml* )
-      __docompose exec movan-syncnode movan-syncnode version
+      __docompose exec movan-syncnode movad version
       ;;
   esac
 }

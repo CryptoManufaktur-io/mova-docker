@@ -5,3 +5,6 @@
 *.bak
 *.original
 custom.yml
+
+# Node data bind-mounted into the container (chain data and node keys)
+/node-data/

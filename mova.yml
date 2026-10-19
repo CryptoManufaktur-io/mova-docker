@@ -28,14 +28,6 @@ services:
         soft: 65536
         hard: 65536
     <<: *logging
-    # deploy.restart_policy only applies under Swarm; restart: unless-stopped
-    # above is what actually governs restarts under plain `docker compose up`
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 15s
-        max_attempts: 100
-        window: 120s
     ports:
       # P2P must stay public - do not gate this behind mova-shared.yml
       - ${HOST_IP:-0.0.0.0}:${P2P_PORT:-26656}:26656
